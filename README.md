@@ -196,3 +196,233 @@ chmod 600 ~/.ssh/authorized_keys
 ## ✅ Done
 
 Now you have a fully automated CI/CD pipeline for deploying a static HTML site 🚀
+
+
+
+
+
+
+# 🚀 Deploy HTML Site to S3 using GitHub Actions
+
+This guide shows how to host a static website using AWS S3 and automate deployment with GitHub Actions.
+
+---
+
+## 📦 Tech Stack
+
+* GitHub (Code Repository)
+* GitHub Actions (CI/CD)
+* AWS S3 (Static Hosting)
+
+---
+
+## 🪣 1. Create S3 Bucket
+
+* Go to AWS → S3
+* Create bucket
+* Bucket name must be **globally unique**
+
+Example:
+
+```
+my-html-site-123
+```
+
+---
+
+## 🌐 2. Enable Static Website Hosting
+
+In S3 bucket:
+
+* Go to **Properties**
+* Enable:
+
+  * Static website hosting
+* Set:
+
+  * Index document → `index.html`
+
+You’ll get a URL like:
+
+```
+http://your-bucket-name.s3-website-region.amazonaws.com
+```
+
+---
+
+## 🔓 3. Make Bucket Public
+
+Go to:
+**Permissions → Block public access**
+
+* Disable "Block all public access"
+
+Add bucket policy:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicRead",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": ["s3:GetObject"],
+      "Resource": ["arn:aws:s3:::your-bucket-name/*"]
+    }
+  ]
+}
+```
+
+---
+
+## 🔐 4. Create IAM User
+
+Go to:
+AWS → IAM
+
+Create user with:
+
+* Programmatic access
+
+Attach policy:
+
+* `AmazonS3FullAccess` (or limited custom)
+
+Save:
+
+* Access Key
+* Secret Key
+
+---
+
+## 🔑 5. Add GitHub Secrets
+
+In your GitHub repo:
+
+**Settings → Secrets → Actions**
+
+Add:
+
+| Secret                | Value            |
+| --------------------- | ---------------- |
+| AWS_ACCESS_KEY_ID     | your key         |
+| AWS_SECRET_ACCESS_KEY | your secret      |
+| AWS_REGION            | e.g. ap-south-1  |
+| S3_BUCKET             | your bucket name |
+
+---
+
+## ⚙️ 6. GitHub Actions Workflow
+
+Create:
+
+```
+.github/workflows/deploy.yml
+```
+
+Paste:
+
+```yaml
+name: Deploy to S3
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync . s3://${{ secrets.S3_BUCKET }} --delete
+```
+
+---
+
+## 🚀 7. Deploy
+
+1. Push code to `main`
+2. GitHub Actions runs
+3. Files uploaded to S3
+4. Website is live 🎉
+
+---
+
+## 🌍 Access Website
+
+Open:
+
+```
+http://your-bucket-name.s3-website-region.amazonaws.com
+```
+
+---
+
+## ⚡ Optional Improvements
+
+### ✅ Use CloudFront (CDN)
+
+* Faster global delivery
+* HTTPS support
+
+### ✅ Custom Domain
+
+* Route53 → point domain to S3/CloudFront
+
+### ✅ Cache Control
+
+```bash
+aws s3 sync . s3://bucket --cache-control "max-age=3600"
+```
+
+---
+
+## 🧪 Debugging
+
+### Check files uploaded
+
+```bash
+aws s3 ls s3://your-bucket-name
+```
+
+### Fix public access issue
+
+* Ensure bucket policy is correct
+* Public access block disabled
+
+---
+
+## ❗ Common Issues
+
+* Access denied → wrong IAM permissions
+* Website not loading → static hosting not enabled
+* 403 error → bucket not public
+* Wrong region in URL
+
+---
+
+## 🧠 Notes
+
+* S3 is best for static sites (HTML, CSS, JS)
+* No server needed
+* Very low cost
+
+---
+
+## ✅ Done
+
+Now you have a serverless deployment pipeline 🚀
