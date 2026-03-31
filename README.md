@@ -56,6 +56,14 @@ sudo systemctl enable nginx
 sudo chown -R ubuntu:ubuntu /var/www/html
 ```
 
+'''
+Generate SSH Key (Recommended)
+
+Run this on your local machine (Git Bash / terminal):
+
+ssh-keygen -t rsa -b 4096 -C "github-actions"
+'''
+
 ---
 
 ## 🔐 GitHub Secrets Setup
